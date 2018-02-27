@@ -1,6 +1,7 @@
 package com.neixar.sct.buscaLigas.Process;
 
-import com.neixar.sct.buscaLigas.Files.GetAllFiles;
+import com.neixar.sct.buscaLigas.Files.ListFiles;
+
 import java.util.Scanner;
 import java.util.Collection;
 import java.util.Iterator;
@@ -12,7 +13,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		String pathOriginal = "";
-		GetAllFiles getAllFiles;
+		
 		if(args.length >= 1) {
 			pathOriginal = args[0];
 			
@@ -21,20 +22,15 @@ public class Main {
 			scanner = new Scanner(System.in);
 			pathOriginal = scanner.nextLine();
 		}
+				
+		File file = new File(pathOriginal);		
+		ListFiles listFiles = new ListFiles();
 		
-		getAllFiles = new GetAllFiles(pathOriginal);
+		//print files inside:
+		listFiles.getFiles(file);
 		
-		Collection<File> files = getAllFiles.getFiles();
-		Iterator<File> iterator = files.iterator();
-		while(iterator.hasNext()) {
-			File file = iterator.next();
-			String path = file.getAbsolutePath();
-			String strFile = file.getName();
-			
-			//System.out.println("path: " +  path + " file: " + strFile);
-		}
 		
-		System.out.println("End");
+		
 		
 		
 	}

@@ -5,16 +5,16 @@ import java.util.Collection;
 import java.util.ArrayList;
 
 public class ListFiles {
-	
-	private Collection<File> file = new ArrayList<File>();
-	
-	public Collection<File> getFiles(File file){
-		
-		if(file.isDirectory())
-			
-		
-		
-	}
-	
 
+	public void getFiles(File file){
+		
+		if(file.isDirectory()) {
+			File[] arrfiles = file.listFiles();
+			for(int index = 0 ; index < arrfiles.length ; index++) {
+				getFiles(arrfiles[index]);
+			}
+			
+		}		
+		System.out.println(file.getPath());		
+	}
 }
