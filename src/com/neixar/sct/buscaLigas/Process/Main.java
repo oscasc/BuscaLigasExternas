@@ -14,6 +14,7 @@ import java.io.File;
 
 public class Main {
 
+	
 	private static Scanner scanner;
 	private static Collection<File> listadoArchivos = new ArrayList<File>(); //Listado de archivos del directorio a revisar
 	private static HashMap<String,Registro> hashPrincipal = new HashMap<String,Registro>(); //Resultados
