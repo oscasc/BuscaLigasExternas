@@ -1,4 +1,8 @@
 # eclipse
+*.jar
+*.war
+*.ear
+*.class
 *.pydevproject
 .project
 .metadata
@@ -15,4 +19,3 @@ local.properties
 .loadpath
 .externalToolBuilders/
 *.launch
-.buildpath

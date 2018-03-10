@@ -2,19 +2,18 @@ package com.neixar.sct.buscaLigas.Files;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.ArrayList;
 
 public class ListFiles {
 
-	public void getFiles(File file){
-		
-		if(file.isDirectory()) {
+	public void getFiles(Collection<File> archivos, File file) {
+
+		if (file.isDirectory()) {
 			File[] arrfiles = file.listFiles();
-			for(int index = 0 ; index < arrfiles.length ; index++) {
-				getFiles(arrfiles[index]);
+			for (int index = 0; index < arrfiles.length; index++) {
+				getFiles(archivos, arrfiles[index]);
 			}
-			
-		}		
-		System.out.println(file.getPath());		
+
+		}else
+			archivos.add(file);
 	}
 }
