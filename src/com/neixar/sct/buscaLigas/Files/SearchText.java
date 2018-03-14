@@ -13,9 +13,12 @@ import java.util.ArrayList;
 
 public class SearchText {
 
-	String protocolo = "(https?|ftp|file)://";
-	String patronServidor = protocolo + "[-a-zA-Z0-9\\.]+";
-	String patronURL = patronServidor + "[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+	enum tipoPatron {
+		servidor, local, ninguno
+	};
+
+	String regexSrv = "(https?|ftp|file)://([-a-zA-Z0-9+&@#%=~_|\\\\.]+)([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*)";
+	String regexLocal = "([cdefgCDEFG]:(\\\\+|//*)([-a-zA-Z0-9+&@#%=~_|.\\s]+))([-a-zA-Z0-9+&@#/%?=~_|!:,\\\\.;\\s]*)";
 
 	/*
 	 * Analiza el contenido de la línea en búsqueda del patrón. Si lo encuentra
@@ -25,11 +28,9 @@ public class SearchText {
 	private void pushLine(HashMap<String, Registro> hash, String fileName, String linea) {
 
 		// Busca patrón de Servidor
-		Pattern patternSrv = Pattern.compile(patronServidor);
-		Matcher matcherSrv = patternSrv.matcher(linea);
-		Pattern patternURL;
-		Matcher matcherURL;
-				
+		Pattern pattern = Pattern.compile(regexSrv);
+		Matcher matcher = pattern.matcher(linea);
+		tipoPatron tipo = tipoPatron.ninguno;
 
 		// Estructura Hash
 		Registro registro;
@@ -37,13 +38,27 @@ public class SearchText {
 		ArrayList<String> archivos;
 		ArrayList<String> ejemplos;
 
-		// Se encontró un servidor en la línea
-		if (matcherSrv.find()) {
+		String url = "";
+		String servername = "";
 
-			//Nombre del Servidor sin el protocolo
-			String nombreServidor = matcherSrv.group().replaceAll(protocolo, ""); 
-			
-			registro = hash.get(nombreServidor);
+		if (matcher.find()) {
+			tipo = tipoPatron.servidor;
+			url = matcher.group(0);
+			servername = matcher.group(2);
+		} else {
+			pattern = Pattern.compile(regexLocal);
+			matcher = pattern.matcher(linea);
+			if (matcher.find()) {
+				tipo = tipoPatron.local;
+				url = matcher.group(0);
+				servername = matcher.group(1);
+			}
+		}
+
+		// Se encontró un servidor en la línea
+		if (tipo != tipoPatron.ninguno) {
+
+			registro = hash.get(servername);
 
 			// Buscamos si existe el servidor.
 			if (registro == null) {
@@ -59,26 +74,24 @@ public class SearchText {
 			}
 
 			// Agregamos información de URLS, Archivos, ejemplos
-			patternURL = Pattern.compile(patronURL);
-			matcherURL = patternURL.matcher(linea);					
-			String url;
-			
-			if(matcherURL.find()) {
-				url = matcherURL.group();
+			try {
+
 				urls.add(url);
 				registro.setUrls(urls);
-			}
-			
-			archivos.add(fileName);
-			ejemplos.add(linea);
 
-			
+				archivos.add(fileName);
+				ejemplos.add(linea);
+			} catch (NullPointerException ex) {
+				System.out.println("Línea: " + linea);
+				ex.printStackTrace();
+			}
+
 			registro.setArchivos(archivos);
 			registro.setEjemplos(ejemplos);
 
-			hash.put(nombreServidor, registro);
+			hash.put(servername, registro);
 
-		}//No se encontró url en la línea
+		} // No se encontró url en la línea
 	}
 
 	/*
@@ -87,16 +100,16 @@ public class SearchText {
 	public void processFile(File file, HashMap<String, Registro> hash) {
 
 		BufferedReader breader = null;
-		String fileName;		
+		String fileName;
 
 		if (file.isDirectory())
 			return; // Retorna el hashPrincipa, sin cambios.
-		
+
 		fileName = file.getName();
-		//extension = fileName.substring(fileName.indexOf("."),fileName.length());
-		
-		//Sólo archivos java y js.
-		if(!fileName.toLowerCase().endsWith(".java") && !fileName.toLowerCase().endsWith(".js") )
+		// extension = fileName.substring(fileName.indexOf("."),fileName.length());
+
+		// Sólo archivos java y js.
+		if (!fileName.toLowerCase().endsWith(".java") && !fileName.toLowerCase().endsWith(".js"))
 			return;
 
 		try {

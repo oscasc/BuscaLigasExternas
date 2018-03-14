@@ -21,14 +21,20 @@ public class Main {
 
 	public static void main(String[] args) {
 		String pathOriginal = "";
+		String archivoXLS = ""; 
 		
-		if(args.length >= 1) {
-			pathOriginal = args[0];
+		if(args.length == 3) {
+			pathOriginal = args[1];
+			archivoXLS = args[2];
 			
 		}else {
 			System.out.print("Ingresa ruta: ");
 			scanner = new Scanner(System.in);
 			pathOriginal = scanner.nextLine();
+			System.out.print("Nombre Archivo XLS: ");
+			scanner = new Scanner(System.in);
+			archivoXLS = scanner.nextLine();
+			
 		}
 				
 		File file = new File(pathOriginal);		
@@ -54,9 +60,11 @@ public class Main {
 		//queda pendiente explotar la colección hash.
 		System.out.println("Cantidad de registros: " +  hashPrincipal.size());
 		
-		String fileOutput = "C:\\Users\\Oscar Salgado\\Documents\\Logs SCT\\Dummy";
+		String fileOutput =  pathOriginal + "/" + archivoXLS;
 		ExportXLSLFile efile = new ExportXLSLFile(fileOutput,hashPrincipal);
 		efile.writeFile();
+		
+		System.out.println("!Terminado el proceso!");
 		
 		
 		

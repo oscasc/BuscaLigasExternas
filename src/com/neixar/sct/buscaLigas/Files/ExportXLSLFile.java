@@ -1,119 +1,122 @@
 package com.neixar.sct.buscaLigas.Files;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.io.IOException;
-
-import java.util.ArrayList;
-import com.neixar.sct.buscaLigas.Record.Registro;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.IndexedColors;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import com.neixar.sct.buscaLigas.Record.Registro;
 
 public class ExportXLSLFile {
 
 	private HashMap<String, Registro> hash;
 	private FileOutputStream file;
-	
-	private  HSSFWorkbook workbook;
+
+	private HSSFWorkbook workbook;
 	private HSSFSheet sheet;
-	String[] headers = {"Servidor", "URL", "Archivos", "Ejemplos"};
-	
+	String[] headers = { "Servidor", "URL", "Archivos", "Ejemplos" };
 
 	public ExportXLSLFile(String fileName, HashMap<String, Registro> hash) {
 		this.hash = hash;
 		try {
-		file = new FileOutputStream(fileName.trim() + ".xls");
-		}catch(FileNotFoundException ex){
-			System.out.println("No se puede crear el archivo: " +  fileName + ".xls");
+			file = new FileOutputStream(fileName.trim() + ".xls");
+		} catch (FileNotFoundException ex) {
+			System.out.println("No se puede crear el archivo: " + fileName + ".xls");
 			ex.printStackTrace();
 		}
 	}
 
 	public void writeFile() {
-		
+
 		workbook = new HSSFWorkbook();
 		sheet = workbook.createSheet();
 		workbook.setSheetName(0, "Ligas");
-		
-		
-		
+
 		String dataBody;
+		String exampleBody;
 		try {
 
-
-			
-			//Estilo del encabezado
+			// Estilo del encabezado
 			CellStyle headerStyle = workbook.createCellStyle();
-	        Font font = workbook.createFont();
-	        font.setBold(true);
-	        headerStyle.setFont(font);
-			
-			//Crear encabezado
+			Font font = workbook.createFont();
+			font.setBold(true);
+			headerStyle.setFont(font);
+
+			// Crear encabezado
 			int row = 0;
 			HSSFRow headerRow = sheet.createRow(row++);
-			int col=0;
-			for(String header: headers) {
+			int col = 0;
+			for (String header : headers) {
 				HSSFCell cell = headerRow.createCell(col++);
-				cell.setCellStyle(headerStyle); //Header en Bold
+				cell.setCellStyle(headerStyle); // Header en Bold
 				cell.setCellValue(header);
 			}
-			
-			//Datos de la Hoja Excel
+
+			// Datos de la Hoja Excel
 			for (Map.Entry<String, Registro> entry : hash.entrySet()) {
-				
+
+				dataBody = "";
+				exampleBody = "";
+
 				Registro registro = entry.getValue();
 				ArrayList<String> urls = registro.getUrl();
 				ArrayList<String> archivos = registro.getArchivos();
 				ArrayList<String> ejemplos = registro.getEjemplos();
-				
+
 				col = 0;
-				//Conformación del nuevo renglón
-				HSSFRow rowdataXLS = sheet.createRow(row++);
-				HSSFCell cell = rowdataXLS.createCell(col++);
-				cell.setCellValue(entry.getKey()); //Nombre del Servidor (columna 0)
-				
-				//Segunda columna: URLs
-				dataBody = "";
-				for(String url: urls) 
-					dataBody += url + "\n";
-				cell = rowdataXLS.createCell(col++);
-				cell.setCellValue(dataBody);
-				
-				//Tercera columna: Archivo
-				dataBody = "";
-				for (String archivo : archivos) 					
-					dataBody += archivo + "\n";			
-				cell = rowdataXLS.createCell(col++);
-				cell.setCellValue(dataBody);
-				
-				//Cuarta columna: Ejemplos
-				dataBody = "";
+				// Conformación del nuevo renglón (Sólo si contiene ejemplos)
+				// Cuarta columna: Ejemplos
+				exampleBody = "";
 				for (String ejemplo : ejemplos) {
 					if (ejemplo.trim().startsWith("*") || ejemplo.trim().startsWith("//"))
 						continue;
 
+					// Que cada línea de ejemplo, no exceda 500 caracteres
 					if (ejemplo.length() > 500)
 						ejemplo = ejemplo.substring(0, 499);
 
-					dataBody += ejemplo + "\n";
+					exampleBody += ejemplo + "\n";
 				}
+
+				if (exampleBody.trim().equals(""))
+					continue; // Si no tiene ejemplos
+
+				HSSFRow rowdataXLS = sheet.createRow(row++);
+				HSSFCell cell = rowdataXLS.createCell(col++);
+				cell.setCellValue(entry.getKey()); // Nombre del Servidor (columna 0)
+
+				// Segunda columna: URLs
+				for (String url : urls)
+					dataBody += url + "\n";
 				cell = rowdataXLS.createCell(col++);
 				cell.setCellValue(dataBody);
 
-				
+				// Tercera columna: Archivo
+				dataBody = "";
+				for (String archivo : archivos)
+					dataBody += archivo + "\n";
+				cell = rowdataXLS.createCell(col++);
+				cell.setCellValue(dataBody);
+
+				// Registramos la cuarta columna (Ejemplos)
+				cell = rowdataXLS.createCell(col++);
+				cell.setCellValue(exampleBody);
 
 			}
 			workbook.write(file);
+
+			// Borramos los renglones que carezcan de ejemplos
+			// delRowBlank(sheet);
+
 			workbook.close();
 
 		} catch (IOException ex) {
