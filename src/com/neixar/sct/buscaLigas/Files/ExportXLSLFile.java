@@ -98,6 +98,10 @@ public class ExportXLSLFile {
 				for (String url : urls)
 					dataBody += url + "\n";
 				cell = rowdataXLS.createCell(col++);
+				
+				if(dataBody.length()>32767)
+					dataBody = dataBody.substring(0, 32766);
+				
 				cell.setCellValue(dataBody);
 
 				// Tercera columna: Archivo
@@ -105,10 +109,19 @@ public class ExportXLSLFile {
 				for (String archivo : archivos)
 					dataBody += archivo + "\n";
 				cell = rowdataXLS.createCell(col++);
+				
+				if(dataBody.length()>32767)
+					dataBody = dataBody.substring(0, 32766);
+				
 				cell.setCellValue(dataBody);
 
 				// Registramos la cuarta columna (Ejemplos)
 				cell = rowdataXLS.createCell(col++);
+				
+				//Limitamos el tamaño del contenido en la celda de ejemplo.
+				if(exampleBody.length()> 32767)
+					exampleBody = exampleBody.substring(0, 32766);
+				
 				cell.setCellValue(exampleBody);
 
 			}
