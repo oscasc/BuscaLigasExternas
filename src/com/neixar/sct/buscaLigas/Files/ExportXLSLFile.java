@@ -24,8 +24,10 @@ public class ExportXLSLFile {
 	private HSSFWorkbook workbook;
 	private HSSFSheet sheet;
 	String[] headers = { "Servidor", "URL", "Archivos", "Ejemplos" };
+	String pathOriginal;
 
-	public ExportXLSLFile(String fileName, HashMap<String, Registro> hash) {
+	public ExportXLSLFile(String fileName, HashMap<String, Registro> hash, String pathOriginal) {
+		this.pathOriginal = pathOriginal;
 		this.hash = hash;
 		try {
 			file = new FileOutputStream(fileName.trim() + ".xls");
@@ -77,12 +79,13 @@ public class ExportXLSLFile {
 				// Cuarta columna: Ejemplos
 				exampleBody = "";
 				for (String ejemplo : ejemplos) {
-					if (ejemplo.trim().startsWith("*") || ejemplo.trim().startsWith("//"))
+					ejemplo = ejemplo.trim();
+					if (ejemplo.startsWith("*") || ejemplo.startsWith("//") || ejemplo.startsWith("/*"))
 						continue;
 
-					// Que cada línea de ejemplo, no exceda 500 caracteres
-					if (ejemplo.length() > 500)
-						ejemplo = ejemplo.substring(0, 499);
+					// Que cada línea de ejemplo, no exceda 300 caracteres
+					if (ejemplo.length() > 300)
+						ejemplo = ejemplo.substring(0, 299);
 
 					exampleBody += ejemplo + "\n";
 				}
@@ -96,32 +99,33 @@ public class ExportXLSLFile {
 
 				// Segunda columna: URLs
 				for (String url : urls)
-					dataBody += url + "\n";
+					dataBody += url.trim() + "\n";
+
 				cell = rowdataXLS.createCell(col++);
-				
-				if(dataBody.length()>32767)
-					dataBody = dataBody.substring(0, 32766);
-				
+
+				dataBody = formatCell(dataBody);
+
 				cell.setCellValue(dataBody);
 
 				// Tercera columna: Archivo
 				dataBody = "";
-				for (String archivo : archivos)
-					dataBody += archivo + "\n";
+				for (String archivo : archivos) {
+					//Substraemos a "archivo" el path original (pathOriginal)
+					archivo = archivo.substring(pathOriginal.length(), archivo.length()-1);					
+					dataBody += archivo.trim() + "\n";
+				}
 				cell = rowdataXLS.createCell(col++);
-				
-				if(dataBody.length()>32767)
-					dataBody = dataBody.substring(0, 32766);
-				
+
+				dataBody = formatCell(dataBody);
+
 				cell.setCellValue(dataBody);
 
 				// Registramos la cuarta columna (Ejemplos)
 				cell = rowdataXLS.createCell(col++);
-				
-				//Limitamos el tamaño del contenido en la celda de ejemplo.
-				if(exampleBody.length()> 32767)
-					exampleBody = exampleBody.substring(0, 32766);
-				
+
+				// Limitamos el tamaño del contenido en la celda de ejemplo.
+				exampleBody = formatCell(exampleBody);
+
 				cell.setCellValue(exampleBody);
 
 			}
@@ -136,6 +140,18 @@ public class ExportXLSLFile {
 			System.out.println("Error::ExportFile.write:");
 			ex.printStackTrace();
 		}
+	}
+
+	String formatCell(String cell) {
+
+		if (cell.endsWith("\n"))
+			cell = cell.substring(0, cell.length() - 1);
+
+		if (cell.length() > 32766)
+			cell = cell.substring(0, 32766);
+
+		return cell;
+
 	}
 
 }

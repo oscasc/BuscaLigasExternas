@@ -99,6 +99,13 @@ public class SearchText {
 	 */
 	public void processFile(File file, HashMap<String, Registro> hash) {
 
+		//Se usará para evaluar los tipos de extensiones de archivos, válidos a considerar
+		String[] validExts = {
+				"jsp","js", "java", "html", "htm", "config","xml", "inf","jrxml"
+		};
+		//Se pondrá en true en caso que el archivo a evaluar coincida con el tipo de extensión en validExts
+		boolean processIt = false;
+		
 		BufferedReader breader = null;
 		String fileName;
 
@@ -106,10 +113,25 @@ public class SearchText {
 			return; // Retorna el hashPrincipa, sin cambios.
 
 		fileName = file.getName();
-		// extension = fileName.substring(fileName.indexOf("."),fileName.length());
 
 		// Sólo archivos java y js.
-		if (!fileName.toLowerCase().endsWith(".java") && !fileName.toLowerCase().endsWith(".js"))
+		String[] fileExt = fileName.split("\\.");
+		
+		if(fileExt.length <=0)
+			return;
+		
+		String extension = fileExt[fileExt.length-1]; //Obtenemos extensiones
+		for(String validExtension: validExts) {
+			if(extension.toLowerCase().equals(validExtension)) {
+				processIt = true;
+				break;
+			}
+		}
+		
+		
+		//El archivo no es de una extensión válida.
+		//No lo procesaremos
+		if (!processIt) 
 			return;
 
 		try {

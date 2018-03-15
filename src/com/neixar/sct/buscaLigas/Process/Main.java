@@ -61,7 +61,7 @@ public class Main {
 		System.out.println("Cantidad de registros: " +  hashPrincipal.size());
 		
 		String fileOutput =  pathOriginal + "/" + archivoXLS;
-		ExportXLSLFile efile = new ExportXLSLFile(fileOutput,hashPrincipal);
+		ExportXLSLFile efile = new ExportXLSLFile(fileOutput,hashPrincipal,pathOriginal);
 		efile.writeFile();
 		
 		System.out.println("!Terminado el proceso!");
