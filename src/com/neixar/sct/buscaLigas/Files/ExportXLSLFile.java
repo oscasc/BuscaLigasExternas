@@ -4,15 +4,19 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 
 import com.neixar.sct.buscaLigas.Record.Registro;
 
@@ -23,7 +27,13 @@ public class ExportXLSLFile {
 
 	private HSSFWorkbook workbook;
 	private HSSFSheet sheet;
+	
+	//Encabezados de la homa de Excel
 	String[] headers = { "Servidor", "URL", "Archivos", "Ejemplos" };
+	
+	//PAra identificar los comentarios
+	String[] comentarios = { "<!--", "//", "/*", "*", "<%--", "<%//", "<%/*","<% //", "<% /*" };
+	
 	String pathOriginal;
 
 	public ExportXLSLFile(String fileName, HashMap<String, Registro> hash, String pathOriginal) {
@@ -37,11 +47,20 @@ public class ExportXLSLFile {
 		}
 	}
 
-	public void writeFile() {
+	public void writeFile(String labelWorkBook) {
 
 		workbook = new HSSFWorkbook();
 		sheet = workbook.createSheet();
-		workbook.setSheetName(0, "Ligas");
+
+		// Nombre muy largo para nombre de Workbook
+		if (labelWorkBook.length() > 10)
+			labelWorkBook = labelWorkBook.trim().substring(0, 10);
+
+		workbook.setSheetName(0, labelWorkBook);
+
+		HSSFCellStyle cellStyle = (HSSFCellStyle) workbook.createCellStyle();
+		cellStyle.setAlignment(HorizontalAlignment.LEFT);
+		cellStyle.setVerticalAlignment(VerticalAlignment.TOP);
 
 		String dataBody;
 		String exampleBody;
@@ -63,13 +82,16 @@ public class ExportXLSLFile {
 				cell.setCellValue(header);
 			}
 
-			// Datos de la Hoja Excel
-			for (Map.Entry<String, Registro> entry : hash.entrySet()) {
+			// Modificación para presentar información ordenada alfabéticamente (columna A)
+			List<String> srvOrdered = new ArrayList<String>(hash.keySet());
+			Collections.sort(srvOrdered);
+			for (String key : srvOrdered) {
 
 				dataBody = "";
 				exampleBody = "";
 
-				Registro registro = entry.getValue();
+				// Registro registro = entry.getValue();
+				Registro registro = hash.get(key);
 				ArrayList<String> urls = registro.getUrl();
 				ArrayList<String> archivos = registro.getArchivos();
 				ArrayList<String> ejemplos = registro.getEjemplos();
@@ -78,10 +100,15 @@ public class ExportXLSLFile {
 				// Conformación del nuevo renglón (Sólo si contiene ejemplos)
 				// Cuarta columna: Ejemplos
 				exampleBody = "";
+				delExamples:
 				for (String ejemplo : ejemplos) {
 					ejemplo = ejemplo.trim();
-					if (ejemplo.startsWith("*") || ejemplo.startsWith("//") || ejemplo.startsWith("/*"))
-						continue;
+					for(String comentario : comentarios) {
+						if(ejemplo.startsWith(comentario))
+							continue delExamples;
+					}
+					//if (ejemplo.startsWith("*") || ejemplo.startsWith("//") || ejemplo.startsWith("/*"))
+						//continue;
 
 					// Que cada línea de ejemplo, no exceda 300 caracteres
 					if (ejemplo.length() > 300)
@@ -89,13 +116,17 @@ public class ExportXLSLFile {
 
 					exampleBody += ejemplo + "\n";
 				}
+				
+					
+				
 
 				if (exampleBody.trim().equals(""))
 					continue; // Si no tiene ejemplos
 
 				HSSFRow rowdataXLS = sheet.createRow(row++);
 				HSSFCell cell = rowdataXLS.createCell(col++);
-				cell.setCellValue(entry.getKey()); // Nombre del Servidor (columna 0)
+				cell.setCellValue(key); // Nombre del Servidor (columna 0)
+				cell.setCellStyle(cellStyle);
 
 				// Segunda columna: URLs
 				for (String url : urls)
@@ -106,12 +137,13 @@ public class ExportXLSLFile {
 				dataBody = formatCell(dataBody);
 
 				cell.setCellValue(dataBody);
+				cell.setCellStyle(cellStyle);
 
 				// Tercera columna: Archivo
 				dataBody = "";
 				for (String archivo : archivos) {
-					//Substraemos a "archivo" el path original (pathOriginal)
-					archivo = archivo.substring(pathOriginal.length(), archivo.length()-1);					
+					// Substraemos a "archivo" el path original (pathOriginal)
+					archivo = archivo.substring(pathOriginal.length(), archivo.length());
 					dataBody += archivo.trim() + "\n";
 				}
 				cell = rowdataXLS.createCell(col++);
@@ -119,6 +151,7 @@ public class ExportXLSLFile {
 				dataBody = formatCell(dataBody);
 
 				cell.setCellValue(dataBody);
+				cell.setCellStyle(cellStyle);
 
 				// Registramos la cuarta columna (Ejemplos)
 				cell = rowdataXLS.createCell(col++);
@@ -127,8 +160,10 @@ public class ExportXLSLFile {
 				exampleBody = formatCell(exampleBody);
 
 				cell.setCellValue(exampleBody);
+				cell.setCellStyle(cellStyle);
 
 			}
+			FormatSheet(sheet);
 			workbook.write(file);
 
 			// Borramos los renglones que carezcan de ejemplos
@@ -151,6 +186,16 @@ public class ExportXLSLFile {
 			cell = cell.substring(0, 32766);
 
 		return cell;
+
+	}
+
+	// Formatea lo hoja de excel: alienación y ancho de columnas
+	void FormatSheet(HSSFSheet sheet) {
+
+		sheet.setColumnWidth(0, 10000); // Servidor
+		sheet.setColumnWidth(1, 10000); // URL
+		sheet.setColumnWidth(2, 10000); // Archivos
+		sheet.setColumnWidth(3, 30000); // Ejemplos
 
 	}
 

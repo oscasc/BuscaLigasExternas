@@ -23,6 +23,8 @@ public class Main {
 		String pathOriginal = "";
 		String archivoXLS = ""; 
 		
+		System.out.println("Analizador de Ligas\n\n");
+		
 		if(args.length == 3) {
 			pathOriginal = args[1];
 			archivoXLS = args[2];
@@ -62,7 +64,7 @@ public class Main {
 		
 		String fileOutput =  pathOriginal + "/" + archivoXLS;
 		ExportXLSLFile efile = new ExportXLSLFile(fileOutput,hashPrincipal,pathOriginal);
-		efile.writeFile();
+		efile.writeFile(archivoXLS);
 		
 		System.out.println("!Terminado el proceso!");
 		
