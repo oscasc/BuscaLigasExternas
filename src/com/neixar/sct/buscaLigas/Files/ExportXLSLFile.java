@@ -27,13 +27,13 @@ public class ExportXLSLFile {
 
 	private HSSFWorkbook workbook;
 	private HSSFSheet sheet;
-	
-	//Encabezados de la homa de Excel
+
+	// Encabezados de la homa de Excel
 	String[] headers = { "Servidor", "URL", "Archivos", "Ejemplos" };
-	
-	//PAra identificar los comentarios
-	String[] comentarios = { "<!--", "//", "/*", "*", "<%--", "<%//", "<%/*","<% //", "<% /*" };
-	
+
+	// PAra identificar los comentarios
+	String[] comentarios = { "<!--", "//", "/*", "*", "<%--", "<%//", "<%/*", "<% //", "<% /*", "#" };
+
 	String pathOriginal;
 
 	public ExportXLSLFile(String fileName, HashMap<String, Registro> hash, String pathOriginal) {
@@ -100,25 +100,22 @@ public class ExportXLSLFile {
 				// Conformación del nuevo renglón (Sólo si contiene ejemplos)
 				// Cuarta columna: Ejemplos
 				exampleBody = "";
-				delExamples:
-				for (String ejemplo : ejemplos) {
+				delExamples: for (String ejemplo : ejemplos) {
 					ejemplo = ejemplo.trim();
-					for(String comentario : comentarios) {
-						if(ejemplo.startsWith(comentario))
+					for (String comentario : comentarios) {
+						if (ejemplo.startsWith(comentario))
 							continue delExamples;
 					}
-					//if (ejemplo.startsWith("*") || ejemplo.startsWith("//") || ejemplo.startsWith("/*"))
-						//continue;
+					// if (ejemplo.startsWith("*") || ejemplo.startsWith("//") ||
+					// ejemplo.startsWith("/*"))
+					// continue;
 
 					// Que cada línea de ejemplo, no exceda 300 caracteres
 					if (ejemplo.length() > 300)
 						ejemplo = ejemplo.substring(0, 299);
 
-					exampleBody += ejemplo + "\n";
+					exampleBody += ">>> " + ejemplo + "\n";
 				}
-				
-					
-				
 
 				if (exampleBody.trim().equals(""))
 					continue; // Si no tiene ejemplos

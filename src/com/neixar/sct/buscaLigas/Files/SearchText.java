@@ -75,12 +75,17 @@ public class SearchText {
 
 			// Agregamos información de URLS, Archivos, ejemplos
 			try {
-
-				urls.add(url);
+				//Validamos que no se repita la información
+				if(urls.indexOf(url) <0)
+					urls.add(url);
+				
 				registro.setUrls(urls);
 
-				archivos.add(fileName);
-				ejemplos.add(linea);
+				if(archivos.indexOf(fileName)<0)
+					archivos.add(fileName);
+				
+				if(ejemplos.indexOf(linea)<0)
+					ejemplos.add(linea);
 			} catch (NullPointerException ex) {
 				System.out.println("Línea: " + linea);
 				ex.printStackTrace();
@@ -101,7 +106,7 @@ public class SearchText {
 
 		//Se usará para evaluar los tipos de extensiones de archivos, válidos a considerar
 		String[] validExts = {
-				"jsp","js", "java", "html", "htm", "config","xml", "inf","jrxml"
+				"jsp","js", "java", "html", "htm", "properties","xml", "inf","jrxml"
 		};
 		//Se pondrá en true en caso que el archivo a evaluar coincida con el tipo de extensión en validExts
 		boolean processIt = false;
