@@ -106,9 +106,6 @@ public class ExportXLSLFile {
 						if (ejemplo.startsWith(comentario))
 							continue delExamples;
 					}
-					// if (ejemplo.startsWith("*") || ejemplo.startsWith("//") ||
-					// ejemplo.startsWith("/*"))
-					// continue;
 
 					// Que cada línea de ejemplo, no exceda 300 caracteres
 					if (ejemplo.length() > 300)
