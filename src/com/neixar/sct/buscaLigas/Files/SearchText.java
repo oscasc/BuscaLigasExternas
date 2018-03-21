@@ -10,6 +10,7 @@ import com.neixar.sct.buscaLigas.Record.Registro;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class SearchText {
 
@@ -21,7 +22,9 @@ public class SearchText {
 	String regexLocal = "([cdefgCDEFG]:(\\\\+|//*)([-a-zA-Z0-9+&@#%=~_|.\\s]+))([-a-zA-Z0-9+&@#/%?=~_|!:,\\\\.;\\s]*)";
 
 	// PAra identificar los comentarios
-	String[] comentarios = { "<!--", "//", "/*", "*", "<%--", "<%//", "<%/*", "<% //", "<% /*", "#" };
+	String[] comentariosLinea = { "//", "*", "<%//", "<%/*", "<% //", "<% /*", "#" };
+	String[] comentariosBloqueOpen = { "/*", "<!--", "<%--" };
+	String[] comentariosBloqueClose = { "*/", "-->", "--%>" };
 
 	/*
 	 * Analiza el contenido de la línea en búsqueda del patrón. Si lo encuentra
@@ -45,7 +48,7 @@ public class SearchText {
 		ArrayList<String> ejemplos;
 
 		// Validamos que no exista comentario
-		for (String comentario : comentarios) {
+		for (String comentario : comentariosLinea) {
 			if (linea.trim().startsWith(comentario))
 				return; // Si la línea es un comentario, ignórala
 		}
@@ -136,7 +139,7 @@ public class SearchText {
 
 		fileName = file.getName();
 
-		// Sólo archivos java y js.
+		// Sólo archivos con extensiones conocidas
 		String[] fileExt = fileName.split("\\.");
 
 		if (fileExt.length <= 0)
@@ -156,13 +159,45 @@ public class SearchText {
 			return;
 
 		try {
+
+			// Esta pila se utiliza para hacer un a parse del codigo
+			// y detectar bloques de comentarios.
+			Stack<String> stack = new Stack<String>();
+
 			FileReader freader = new FileReader(file);
 			breader = new BufferedReader(freader);
 
 			// Lectura, línea a línea del archivo.
 			String line;
 			while ((line = breader.readLine()) != null) {
-				pushLine(hash, file.getPath(), line);
+				ArrayList<String> SubLinea = new ArrayList<String>();
+
+				// V2: Analizar uso de bloques de comentarios
+				for (String comentario : comentariosBloqueOpen) {
+					if (line.contains(comentario)) {
+						stack.push(comentario);
+						SubLinea.add(line.substring(0, line.indexOf(comentario)));
+					}
+				}
+
+				for (String comentario : comentariosBloqueClose) {
+					if (line.contains(comentario)) {
+						stack.pop();
+						SubLinea.add(line.substring(line.indexOf(comentario)+comentario.length(), line.length()));
+					}
+				}
+
+				if (stack.isEmpty()) // Procesa, sólo si la pila está vacía
+				{
+					if(SubLinea.isEmpty())
+						pushLine(hash, file.getPath(), line);
+					else {
+						for(int index = 0; index < SubLinea.size(); index++)
+						{
+							pushLine(hash, file.getPath(), SubLinea.get(index));	
+						}
+					}
+				}
 			}
 
 		} catch (FileNotFoundException ex) {
