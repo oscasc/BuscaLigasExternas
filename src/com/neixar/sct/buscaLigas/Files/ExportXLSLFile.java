@@ -31,9 +31,6 @@ public class ExportXLSLFile {
 	// Encabezados de la homa de Excel
 	String[] headers = { "Servidor", "URL", "Archivos", "Ejemplos" };
 
-	// PAra identificar los comentarios
-	String[] comentarios = { "<!--", "//", "/*", "*", "<%--", "<%//", "<%/*", "<% //", "<% /*", "#" };
-
 	String pathOriginal;
 
 	public ExportXLSLFile(String fileName, HashMap<String, Registro> hash, String pathOriginal) {
@@ -100,12 +97,8 @@ public class ExportXLSLFile {
 				// Conformación del nuevo renglón (Sólo si contiene ejemplos)
 				// Cuarta columna: Ejemplos
 				exampleBody = "";
-				delExamples: for (String ejemplo : ejemplos) {
+				for (String ejemplo : ejemplos) {
 					ejemplo = ejemplo.trim();
-					for (String comentario : comentarios) {
-						if (ejemplo.startsWith(comentario))
-							continue delExamples;
-					}
 
 					// Que cada línea de ejemplo, no exceda 300 caracteres
 					if (ejemplo.length() > 300)

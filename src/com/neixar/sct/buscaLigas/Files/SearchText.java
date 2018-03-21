@@ -20,10 +20,16 @@ public class SearchText {
 	String regexSrv = "(https?|ftp|file)://([-a-zA-Z0-9+&@#%=~_|\\\\.]+)([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*)";
 	String regexLocal = "([cdefgCDEFG]:(\\\\+|//*)([-a-zA-Z0-9+&@#%=~_|.\\s]+))([-a-zA-Z0-9+&@#/%?=~_|!:,\\\\.;\\s]*)";
 
+	// PAra identificar los comentarios
+	String[] comentarios = { "<!--", "//", "/*", "*", "<%--", "<%//", "<%/*", "<% //", "<% /*", "#" };
+
 	/*
 	 * Analiza el contenido de la línea en búsqueda del patrón. Si lo encuentra
 	 * busca si existe el servidor (HashMap<key>) agrega items a la llave
 	 * correspondiente, si no existe la llave, crea una entrada adicional.
+	 * 
+	 * V2. Antes de ingresar un registro, validar que la línea de código no posea
+	 * comentarios
 	 */
 	private void pushLine(HashMap<String, Registro> hash, String fileName, String linea) {
 
@@ -37,6 +43,12 @@ public class SearchText {
 		ArrayList<String> urls;
 		ArrayList<String> archivos;
 		ArrayList<String> ejemplos;
+
+		// Validamos que no exista comentario
+		for (String comentario : comentarios) {
+			if (linea.trim().startsWith(comentario))
+				return; // Si la línea es un comentario, ignórala
+		}
 
 		String url = "";
 		String servername = "";
@@ -75,24 +87,29 @@ public class SearchText {
 
 			// Agregamos información de URLS, Archivos, ejemplos
 			try {
-				//Validamos que no se repita la información
-				if(urls.indexOf(url) <0)
-					urls.add(url);
-				
-				registro.setUrls(urls);
 
-				if(archivos.indexOf(fileName)<0)
+				// Validamos que no se repita el url para esta entrada
+				if (urls.indexOf(url) < 0) {
+					urls.add(url);
+					registro.setUrls(urls);
+				}
+
+				// Validamos que no se repita el archivo para esta entrada
+				if (archivos.indexOf(fileName) < 0) {
 					archivos.add(fileName);
-				
-				if(ejemplos.indexOf(linea)<0)
+					registro.setArchivos(archivos);
+				}
+
+				// Validamos que no se repita el código para esta entrada
+				if (ejemplos.indexOf(linea) < 0) {
 					ejemplos.add(linea);
+					registro.setEjemplos(ejemplos);
+				}
+
 			} catch (NullPointerException ex) {
 				System.out.println("Línea: " + linea);
 				ex.printStackTrace();
 			}
-
-			registro.setArchivos(archivos);
-			registro.setEjemplos(ejemplos);
 
 			hash.put(servername, registro);
 
@@ -104,13 +121,13 @@ public class SearchText {
 	 */
 	public void processFile(File file, HashMap<String, Registro> hash) {
 
-		//Se usará para evaluar los tipos de extensiones de archivos, válidos a considerar
-		String[] validExts = {
-				"jsp","js", "java", "html", "htm", "properties","xml", "inf","jrxml"
-		};
-		//Se pondrá en true en caso que el archivo a evaluar coincida con el tipo de extensión en validExts
+		// Se usará para evaluar los tipos de extensiones de archivos, válidos a
+		// considerar
+		String[] validExts = { "jsp", "js", "java", "html", "htm", "properties", "xml", "inf", "jrxml" };
+		// Se pondrá en true en caso que el archivo a evaluar coincida con el tipo de
+		// extensión en validExts
 		boolean processIt = false;
-		
+
 		BufferedReader breader = null;
 		String fileName;
 
@@ -121,22 +138,21 @@ public class SearchText {
 
 		// Sólo archivos java y js.
 		String[] fileExt = fileName.split("\\.");
-		
-		if(fileExt.length <=0)
+
+		if (fileExt.length <= 0)
 			return;
-		
-		String extension = fileExt[fileExt.length-1]; //Obtenemos extensiones
-		for(String validExtension: validExts) {
-			if(extension.toLowerCase().equals(validExtension)) {
+
+		String extension = fileExt[fileExt.length - 1]; // Obtenemos extensiones
+		for (String validExtension : validExts) {
+			if (extension.toLowerCase().equals(validExtension)) {
 				processIt = true;
 				break;
 			}
 		}
-		
-		
-		//El archivo no es de una extensión válida.
-		//No lo procesaremos
-		if (!processIt) 
+
+		// El archivo no es de una extensión válida.
+		// No lo procesaremos
+		if (!processIt)
 			return;
 
 		try {
