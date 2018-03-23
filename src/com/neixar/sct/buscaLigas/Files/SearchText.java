@@ -10,6 +10,7 @@ import com.neixar.sct.buscaLigas.Record.Registro;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.Stack;
 
 public class SearchText {
@@ -21,10 +22,14 @@ public class SearchText {
 	String regexSrv = "(https?|ftp|file)://([-a-zA-Z0-9+&@#%=~_|\\\\.]+)([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*)";
 	String regexLocal = "([cdefgCDEFG]:(\\\\+|//*)([-a-zA-Z0-9+&@#%=~_|.\\s]+))([-a-zA-Z0-9+&@#/%?=~_|!:,\\\\.;\\s]*)";
 
-	// PAra identificar los comentarios
-	String[] comentariosLinea = { "//", "*", "<%//", "<%/*", "<% //", "<% /*", "#" };
-	String[] comentariosBloqueOpen = { "/*", "<!--", "<%--" };
-	String[] comentariosBloqueClose = { "*/", "-->", "--%>" };
+	// Para los comentarios que comiencen con: //, exceptuo url
+	String regexOneLineComment = "((?<!(https?|ftp|file):)//.+)|(<!--.+-->)|(<%--.+--%>)|(/\\*.*\\*/)|(^[\\t\\s]*\\#.*)";
+
+	// Para identificar los comentarios
+	//-> ((?<!(https?|ftp|file):)//.+)|(<!--.+-->)|(<%--.+--%>)|(/\*.*\*/)|(^[\t\s]*\#.*)
+	
+	String[] comentariosBloqueOpen = { "^/\\*", "^<!--", "^<%--" };
+	String[] comentariosBloqueClose = { "^\\*/", "^-->", "^--%>" };
 
 	/*
 	 * Analiza el contenido de la línea en búsqueda del patrón. Si lo encuentra
@@ -46,12 +51,6 @@ public class SearchText {
 		ArrayList<String> urls;
 		ArrayList<String> archivos;
 		ArrayList<String> ejemplos;
-
-		// Validamos que no exista comentario
-		for (String comentario : comentariosLinea) {
-			if (linea.trim().startsWith(comentario))
-				return; // Si la línea es un comentario, ignórala
-		}
 
 		String url = "";
 		String servername = "";
@@ -170,33 +169,44 @@ public class SearchText {
 			// Lectura, línea a línea del archivo.
 			String line;
 			while ((line = breader.readLine()) != null) {
-				ArrayList<String> SubLinea = new ArrayList<String>();
+				
+				//Elimina líneas con comentario de línea al inicio.
+				Pattern patLineComment = Pattern.compile(regexOneLineComment);
+				Matcher matchComment = patLineComment.matcher(line);
+				
+				//Eliminamos de la línea, los comentarios que pudieran existir
+				if(matchComment.find())
+					line = matchComment.replaceAll("");
+				
 
 				// V2: Analizar uso de bloques de comentarios
 				for (String comentario : comentariosBloqueOpen) {
-					if (line.contains(comentario)) {
-						stack.push(comentario);
-						SubLinea.add(line.substring(0, line.indexOf(comentario)));
+					Pattern pattBOpen = Pattern.compile(comentario);
+					Matcher matchBOpen = pattBOpen.matcher(line);
+					if (matchBOpen.find()) {
+						stack.push(matchBOpen.group());						
 					}
 				}
 
 				for (String comentario : comentariosBloqueClose) {
-					if (line.contains(comentario)) {
+					Pattern pattBClose = Pattern.compile(comentario);
+					Matcher matchBClose =pattBClose.matcher(line);
+					if (matchBClose.find()) {
+						try {
 						stack.pop();
-						SubLinea.add(line.substring(line.indexOf(comentario)+comentario.length(), line.length()));
+						}catch(EmptyStackException e) {
+							System.out.println("Hubo un error en la línea:");
+							System.out.println(line);
+							System.out.println("Con el comentario: " + comentario);
+							System.out.println("archivo: " + file.getAbsolutePath());
+							
+						}
 					}
 				}
 
 				if (stack.isEmpty()) // Procesa, sólo si la pila está vacía
 				{
-					if(SubLinea.isEmpty())
-						pushLine(hash, file.getPath(), line);
-					else {
-						for(int index = 0; index < SubLinea.size(); index++)
-						{
-							pushLine(hash, file.getPath(), SubLinea.get(index));	
-						}
-					}
+					pushLine(hash, file.getPath(), line);
 				}
 			}
 
@@ -217,3 +227,10 @@ public class SearchText {
 
 	}
 }
+
+
+
+
+
+
+
