@@ -199,6 +199,7 @@ public class SearchText {
 							System.out.println(line);
 							System.out.println("Con el comentario: " + comentario);
 							System.out.println("archivo: " + file.getAbsolutePath());
+							e.printStackTrace();
 							
 						}
 					}
