@@ -24,10 +24,12 @@ public class Main {
 		String archivoXLS = ""; 
 		
 		System.out.println("Analizador de Ligas\n\n");
+				
 		
-		if(args.length == 3) {
-			pathOriginal = args[1];
-			archivoXLS = args[2];
+		if(args.length == 2) {
+			
+			pathOriginal = args[0];
+			archivoXLS = args[1];
 			
 		}else {
 			System.out.print("Ingresa ruta: ");

@@ -26,10 +26,8 @@ public class SearchText {
 	String regexOneLineComment = "((?<!(https?|ftp|file):)//.+)|(<!--.+-->)|(<%--.+--%>)|(/\\*.*\\*/)|(^[\\t\\s]*\\#.*)";
 
 	// Para identificar los comentarios
-	//-> ((?<!(https?|ftp|file):)//.+)|(<!--.+-->)|(<%--.+--%>)|(/\*.*\*/)|(^[\t\s]*\#.*)
-	
-	String[] comentariosBloqueOpen = { "^/\\*", "^<!--", "^<%--" };
-	String[] comentariosBloqueClose = { "^\\*/", "^-->", "^--%>" };
+	String comentariosBloqueOpen = "(?<!\\/)/\\*|<!--|<%--";
+	String comentariosBloqueClose = "\\*/$|-->|--%>";
 
 	/*
 	 * Analiza el contenido de la línea en búsqueda del patrón. Si lo encuentra
@@ -168,40 +166,46 @@ public class SearchText {
 
 			// Lectura, línea a línea del archivo.
 			String line;
+			int lineNum = 0;
 			while ((line = breader.readLine()) != null) {
+				lineNum++; // Para conocer el número de línea: Usado de Depuración
 				
-				//Elimina líneas con comentario de línea al inicio.
+				//Si es línea vacía, ignorar y continuar
+				if(line.trim().equals(""))
+					continue;
+				
+				line = line.trim();
+				
+				// Elimina líneas con comentario de línea al inicio.
 				Pattern patLineComment = Pattern.compile(regexOneLineComment);
 				Matcher matchComment = patLineComment.matcher(line);
-				
-				//Eliminamos de la línea, los comentarios que pudieran existir
-				if(matchComment.find())
+
+				// Eliminamos de la línea, los comentarios que pudieran existir
+				if (matchComment.find())
 					line = matchComment.replaceAll("");
-				
 
 				// V2: Analizar uso de bloques de comentarios
-				for (String comentario : comentariosBloqueOpen) {
-					Pattern pattBOpen = Pattern.compile(comentario);
-					Matcher matchBOpen = pattBOpen.matcher(line);
-					if (matchBOpen.find()) {
-						stack.push(matchBOpen.group());						
-					}
+
+				Pattern pattBOpen = Pattern.compile(comentariosBloqueOpen);
+				Matcher matchBOpen = pattBOpen.matcher(line);
+				if (matchBOpen.find()) {
+					stack.push(matchBOpen.group().trim());
+					//System.out.println("PUSH: " + line); //debug
 				}
 
-				for (String comentario : comentariosBloqueClose) {
-					Pattern pattBClose = Pattern.compile(comentario);
-					Matcher matchBClose =pattBClose.matcher(line);
-					if (matchBClose.find()) {
-						try {
+				Pattern pattBClose = Pattern.compile(comentariosBloqueClose);
+				Matcher matchBClose = pattBClose.matcher(line);
+				if (matchBClose.find()) {
+					try {
+						//System.out.println("POP:" + line); //debug
 						stack.pop();
-						}catch(EmptyStackException e) {
-							System.out.println("Hubo un error en la línea:");
-							System.out.println(line);
-							System.out.println("Con el comentario: " + comentario);
-							System.out.println("archivo: " + file.getAbsolutePath());
-							e.printStackTrace();
-							
-						}
+					} catch (EmptyStackException e) {
+						System.out.println("Hubo un error en la línea:" + lineNum);
+						System.out.println(line);
+						System.out.println("Con el comentario: " + comentariosBloqueClose);
+						System.out.println("archivo: " + file.getAbsolutePath());
+						e.printStackTrace();
+
 					}
 				}
 
@@ -228,10 +232,3 @@ public class SearchText {
 
 	}
 }
-
-
-
-
-
-
-
