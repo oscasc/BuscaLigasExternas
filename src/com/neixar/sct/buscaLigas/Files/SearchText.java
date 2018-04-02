@@ -27,7 +27,7 @@ public class SearchText {
 
 	// Para identificar los comentarios
 	String comentariosBloqueOpen = "(?<!\\/)/\\*|<!--|<%--";
-	String comentariosBloqueClose = "\\*/$|-->|--%>";
+	String comentariosBloqueClose = "\\*/$|(?<!-)-->|--%>";
 
 	/*
 	 * Analiza el contenido de la línea en búsqueda del patrón. Si lo encuentra
@@ -123,7 +123,7 @@ public class SearchText {
 
 		// Se usará para evaluar los tipos de extensiones de archivos, válidos a
 		// considerar
-		String[] validExts = { "jsp", "js", "java", "html", "htm", "properties", "xml", "inf", "jrxml" };
+		String[] validExts = { "jsp", "js", "java", "html", "htm", "properties", "xml", "inf", "jrxml","json","prefs" };
 		// Se pondrá en true en caso que el archivo a evaluar coincida con el tipo de
 		// extensión en validExts
 		boolean processIt = false;
