@@ -19,11 +19,11 @@ public class SearchText {
 		servidor, local, ninguno
 	};
 
-	String regexSrv = "(https?|ftp|file)://([-a-zA-Z0-9+&@#%=~_|\\\\.]+)([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*)";
+	String regexSrv = "(https?|ftp|file|jdbc:.*)://([-a-zA-Z0-9+&@#%=~_|\\\\.]+)([-a-zA-Z0-9+&@#/%?=~_|!:,.;]*)";
 	String regexLocal = "([cdefgCDEFG]:(\\\\+|//*)([-a-zA-Z0-9+&@#%=~_|.\\s]+))([-a-zA-Z0-9+&@#/%?=~_|!:,\\\\.;\\s]*)";
 
 	// Para los comentarios que comiencen con: //, exceptuo url
-	String regexOneLineComment = "((?<!(https?|ftp|file):)//.+)|(<!--.+-->)|(<%--.+--%>)|(/\\*.*\\*/)|(^[\\t\\s]*\\#.*)";
+	String regexOneLineComment = "((?<!(https?|ftp|file|jdbc:db2|jdbc:sqlserver):)//.+)|(<!--.+-->)|(<%--.+--%>)|(/\\*.*\\*/)|(^[\\t\\s]*\\#.*)";
 
 	// Para identificar los comentarios
 	String comentariosBloqueOpen = "(?<!\\/)/\\*|<!--|<%--";
